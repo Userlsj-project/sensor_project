@@ -1,0 +1,207 @@
+[
+  {
+    "id": "sensor_tab",
+    "type": "tab",
+    "label": "Sensor Dashboard",
+    "disabled": false,
+    "info": "실시간 센서 데이터 대시보드"
+  },
+
+  {
+    "id": "inject_timer",
+    "type": "inject",
+    "z": "sensor_tab",
+    "name": "2초 타이머",
+    "props": [{ "p": "payload" }],
+    "repeat": "2",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 130,
+    "y": 120,
+    "wires": [["inject_query"]]
+  },
+
+  {
+    "id": "mysql_query",
+    "type": "mysql",
+    "z": "sensor_tab",
+    "mydb": "mysql_config",
+    "name": "sensor_data 조회",
+    "x": 330,
+    "y": 120,
+    "wires": [["parse_result"]]
+  },
+
+  {
+    "id": "mysql_config",
+    "type": "MySQLdatabase",
+    "name": "sensor_db",
+    "host": "127.0.0.1",
+    "port": "3306",
+    "db": "sensor_db",
+    "tz": "",
+    "charset": "UTF8",
+    "user": "sensor_user",
+    "password": "sensor_pass"
+  },
+
+  {
+    "id": "parse_result",
+    "type": "function",
+    "z": "sensor_tab",
+    "name": "데이터 파싱",
+    "func": "// MySQL 결과 파싱 및 차트/게이지/텍스트 메시지 생성\nvar rows = msg.payload;\nif (!Array.isArray(rows) || rows.length === 0) {\n    return null;\n}\n\n// 최신값\nvar latest = rows[0].value;\n\n// 차트용: [{x: timestamp, y: value}, ...] (최신이 앞에 있으므로 reverse)\nvar chartData = rows.slice().reverse().map(function(row) {\n    return { x: new Date(row.timestamp).getTime(), y: row.value };\n});\n\nvar msgChart = {\n    payload: [{ series: ['센서값'], data: [chartData], labels: [''] }],\n    topic: 'sensor'\n};\n\nvar msgGauge = { payload: latest };\nvar msgText  = { payload: '현재값: ' + latest.toFixed(2) };\n\nreturn [msgChart, msgGauge, msgText];",
+    "outputs": 3,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 540,
+    "y": 120,
+    "wires": [["ui_chart"], ["ui_gauge"], ["ui_text"]]
+  },
+
+  {
+    "id": "ui_chart",
+    "type": "ui_chart",
+    "z": "sensor_tab",
+    "name": "실시간 라인 차트",
+    "group": "dashboard_group",
+    "order": 1,
+    "width": 12,
+    "height": 6,
+    "label": "센서 실시간 데이터",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "데이터 없음",
+    "dot": false,
+    "ymin": "0",
+    "ymax": "100",
+    "removeOlder": 1,
+    "removeOlderPoints": "100",
+    "removeOlderUnit": "3600",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": ["#1f77b4"],
+    "outputs": 1,
+    "useDifferentColor": false,
+    "x": 770,
+    "y": 80,
+    "wires": [[]]
+  },
+
+  {
+    "id": "ui_gauge",
+    "type": "ui_gauge",
+    "z": "sensor_tab",
+    "name": "현재값 게이지",
+    "group": "dashboard_group",
+    "order": 2,
+    "width": 6,
+    "height": 4,
+    "gtype": "gage",
+    "title": "현재 센서값",
+    "label": "",
+    "format": "{{value | number:2}}",
+    "min": 0,
+    "max": 100,
+    "colors": ["#00b500", "#e6e600", "#ca3838"],
+    "seg1": "33",
+    "seg2": "66",
+    "x": 770,
+    "y": 130,
+    "wires": []
+  },
+
+  {
+    "id": "ui_text",
+    "type": "ui_text",
+    "z": "sensor_tab",
+    "group": "dashboard_group",
+    "order": 3,
+    "width": 6,
+    "height": 2,
+    "name": "현재값 텍스트",
+    "label": "",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "x": 770,
+    "y": 180,
+    "wires": []
+  },
+
+  {
+    "id": "dashboard_group",
+    "type": "ui_group",
+    "name": "센서 모니터링",
+    "tab": "dashboard_tab_ui",
+    "order": 1,
+    "disp": true,
+    "width": 12,
+    "collapse": false
+  },
+
+  {
+    "id": "dashboard_tab_ui",
+    "type": "ui_tab",
+    "name": "센서 대시보드",
+    "icon": "dashboard",
+    "order": 1,
+    "disabled": false,
+    "hidden": false
+  },
+
+  {
+    "id": "catch_error",
+    "type": "catch",
+    "z": "sensor_tab",
+    "name": "오류 처리",
+    "scope": null,
+    "uncaught": false,
+    "x": 130,
+    "y": 220,
+    "wires": [["debug_error"]]
+  },
+
+  {
+    "id": "debug_error",
+    "type": "debug",
+    "z": "sensor_tab",
+    "name": "오류 디버그",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "error",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 330,
+    "y": 220,
+    "wires": []
+  },
+
+  {
+    "id": "inject_query",
+    "type": "template",
+    "z": "sensor_tab",
+    "name": "SQL 쿼리",
+    "field": "topic",
+    "fieldType": "msg",
+    "format": "handlebars",
+    "syntax": "mustache",
+    "template": "SELECT value, timestamp FROM sensor_data ORDER BY id DESC LIMIT 10",
+    "output": "str",
+    "x": 230,
+    "y": 120,
+    "wires": [["mysql_query"]]
+  }
+
+]
