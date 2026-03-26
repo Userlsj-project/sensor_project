@@ -34,7 +34,7 @@ flowchart TD
     C --> F[ui_text\n현재값 텍스트]
     D & E & F --> G[Node-RED 대시보드\nlocalhost:1880/ui]
 
-    B -->|$__timeFilter\n2초 자동 새로고침| H[Grafana\ngrafana_dashboard.json]
+    B -->|$__timeFilter\n5초 자동 새로고침| H[Grafana\ngrafana_dashboard.json]
     H --> I[시계열 그래프 패널]
     H --> J[Stat 패널\n현재값]
     I & J --> K[Grafana 대시보드\nlocalhost:3000]
@@ -55,7 +55,7 @@ flowchart TD
 | `grafana_dashboard.json` | Grafana 대시보드 JSON (Import 용) |
 | `run.sh` | 전체 환경 자동 설정 및 실행 스크립트 |
 | `.gitignore` | Git 추적 제외 파일 목록 |
-| `project.md` | 프로젝트 설명 문서 (이 파일) |
+| `project.md` | 프로젝트 설명 문서 |
 
 ---
 
@@ -114,10 +114,7 @@ pip install -r requirements.txt
 **3단계: Node-RED 실행**
 
 ```bash
-# flows.json 복사
 cp flows.json ~/.node-red/flows.json
-
-# 백그라운드 실행
 node-red &
 ```
 
@@ -131,7 +128,7 @@ sudo systemctl start grafana-server
 
 ```bash
 source .venv/bin/activate
-python injector.py
+python3 injector.py
 ```
 
 ---
@@ -139,7 +136,7 @@ python injector.py
 ## Grafana 데이터소스 설정 (최초 1회)
 
 1. `http://localhost:3000` 접속 (초기 계정: `admin` / `admin`)
-2. **Configuration → Data Sources → Add data source → MySQL** 선택
+2. **Connections → Data Sources → Add data source → MySQL** 선택
 3. 아래 정보 입력:
 
 | 항목 | 값 |
@@ -147,7 +144,7 @@ python injector.py
 | Host | `localhost:3306` |
 | Database | `sensor_db` |
 | User | `sensor_user` |
-| Password | `sensor_pass` |
+| Password | (설정한 비밀번호 입력) |
 | TLS/SSL Mode | `disable` |
 
 4. **Save & Test** 클릭
