@@ -18,7 +18,7 @@ DB_CONFIG = {
     "port":     3306,
     "database": "sensor_db",
     "user":     "sensor_user",
-    "password": "sensor_pass",
+    "password": "sensor1234",
     "autocommit": True,
 }
 
